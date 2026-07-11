@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter
+from fastapi.responses import Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -80,6 +81,17 @@ async def create_contact(payload: ContactCreate):
 async def list_contacts():
     docs = await db.contact_enquiries.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
     return docs
+
+
+@api_router.get("/download-source")
+async def download_source():
+    from source_export import build_source_zip
+    data = build_source_zip()
+    return Response(
+        content=data,
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename=ednd-services-source.zip"},
+    )
 
 
 app.include_router(api_router)
